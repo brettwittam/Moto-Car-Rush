@@ -8,6 +8,7 @@ class Game {
     this.canvas = document.getElementById('game-canvas');
     this.minimapCanvas = document.getElementById('minimap-canvas');
     this.renderer = new Renderer(this.canvas);
+    this.renderer.game = this; // Link game to renderer for custom styling & key states
     this.city = new CityManager();
     this.race = new RaceManager();
 
@@ -23,8 +24,29 @@ class Game {
       nitro: false
     };
 
+    // Virtual Joystick analog state
+    this.joystick = {
+      active: false,
+      x: 0,
+      y: 0
+    };
+
     // Load or initialize Player Progress
     this.playerData = this.loadProgress();
+
+    // Charlotte's Car Customization Options
+    this.carCustomization = Object.assign({
+      paintColor: '#ff007f', // Charlotte's Signature Hot Pink!
+      paintFinish: 'metallic',
+      underglow: 'pink',
+      livery: 'twin_stripes',
+      spoiler: 'gt_wing',
+      rimStyle: 'star_chrome',
+      caliperColor: '#ff0033',
+      windowTint: 'limo_dark',
+      headlightGlow: 'xenon_white',
+      graphicsQuality: 'ultra'
+    }, (this.playerData && this.playerData.carCustomization) || {});
 
     // Active Player Entity
     this.player = {
@@ -96,11 +118,11 @@ class Game {
         name: 'Neon Drift Coupe',
         type: 'car',
         variant: 'coupe',
-        title: 'Street Tuner',
+        title: 'Starter Sports Car',
         desc: 'Sleek sports car with custom tuned drift suspension and +15% top speed.',
         color: '#00f076',
-        cost: 45,
-        unlocked: false,
+        cost: 0,
+        unlocked: true,
         icon: '🚗',
         perk: '+15% Top Speed & Sharp Turning',
         speedMult: 1.15
@@ -1088,35 +1110,164 @@ class Game {
       if (e.code === 'Space') this.keys.nitro = false;
     });
 
-    // Touch controls setup (mobile / tablet friendly)
-    const touchUp = document.getElementById('btn-touch-up');
-    const touchDown = document.getElementById('btn-touch-down');
-    const touchLeft = document.getElementById('btn-touch-left');
-    const touchRight = document.getElementById('btn-touch-right');
-    const touchNitro = document.getElementById('btn-touch-nitro');
+    // ========================================================
+    // CIRCULAR VIRTUAL JOYSTICK & TOUCH CONTROLS
+    // One-finger control: push up-left to drive forward & turn left!
+    // ========================================================
+    const touchControls = document.getElementById('touch-controls');
+    const joyBase = document.getElementById('joystick-base');
+    const joyKnob = document.getElementById('joystick-knob');
+    const joyNitro = document.getElementById('btn-touch-nitro');
+    const btnToggleJoy = document.getElementById('btn-toggle-joystick');
 
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-      const touchContainer = document.getElementById('touch-controls');
-      if (touchContainer) touchContainer.style.display = 'flex';
+    const dirUp = document.getElementById('joy-dir-up');
+    const dirDown = document.getElementById('joy-dir-down');
+    const dirLeft = document.getElementById('joy-dir-left');
+    const dirRight = document.getElementById('joy-dir-right');
+
+    // Auto-display touch joystick on touch devices, tablets, or small screens
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 1024);
+    if (touchControls && isTouchDevice) {
+      touchControls.style.display = 'flex';
     }
 
-    const bindTouch = (el, key) => {
-      if (!el) return;
-      el.addEventListener('pointerdown', e => {
+    // Toggle on-screen joystick button (available on HUD for desktop testing)
+    if (btnToggleJoy && touchControls) {
+      btnToggleJoy.addEventListener('click', () => {
         audio.init();
-        this.keys[key] = true;
-        e.preventDefault();
+        const isHidden = (window.getComputedStyle(touchControls).display === 'none');
+        touchControls.style.display = isHidden ? 'flex' : 'none';
+        this.showToast(isHidden ? "🎮 Touch Circle Joystick Enabled!" : "🎮 Touch Joystick Hidden");
       });
-      el.addEventListener('pointerup', () => { this.keys[key] = false; });
-      el.addEventListener('pointercancel', () => { this.keys[key] = false; });
-      el.addEventListener('pointerleave', () => { this.keys[key] = false; });
-    };
+    }
 
-    bindTouch(touchUp, 'up');
-    bindTouch(touchDown, 'down');
-    bindTouch(touchLeft, 'left');
-    bindTouch(touchRight, 'right');
-    bindTouch(touchNitro, 'nitro');
+    // Rocket Nitro Boost Button
+    if (joyNitro) {
+      const startNitro = (e) => {
+        audio.init();
+        this.keys.nitro = true;
+        joyNitro.classList.add('active');
+        if (e.cancelable) e.preventDefault();
+      };
+      const stopNitro = () => {
+        this.keys.nitro = false;
+        joyNitro.classList.remove('active');
+      };
+      joyNitro.addEventListener('pointerdown', startNitro);
+      joyNitro.addEventListener('pointerup', stopNitro);
+      joyNitro.addEventListener('pointercancel', stopNitro);
+      joyNitro.addEventListener('pointerleave', stopNitro);
+    }
+
+    // Circular Joystick pointer tracking (handles both multi-touch & mouse drag)
+    if (joyBase && joyKnob) {
+      let activePointerId = null;
+      let baseCenter = { x: 0, y: 0 };
+      const maxRadius = 46; // Maximum knob excursion from center
+
+      const updateJoystick = (clientX, clientY) => {
+        const dx = clientX - baseCenter.x;
+        const dy = clientY - baseCenter.y;
+        const dist = Math.hypot(dx, dy);
+
+        let clampedX = dx;
+        let clampedY = dy;
+        if (dist > maxRadius) {
+          clampedX = (dx / dist) * maxRadius;
+          clampedY = (dy / dist) * maxRadius;
+        }
+
+        joyKnob.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+
+        const normX = clampedX / maxRadius; // -1.0 (Left) to +1.0 (Right)
+        const normY = clampedY / maxRadius; // -1.0 (Up/Forward) to +1.0 (Down/Reverse)
+        const mag = Math.hypot(normX, normY);
+
+        const deadzone = 0.16;
+        if (mag < deadzone) {
+          this.keys.up = false;
+          this.keys.down = false;
+          this.keys.left = false;
+          this.keys.right = false;
+          this.joystick.active = false;
+          this.joystick.x = 0;
+          this.joystick.y = 0;
+
+          if (dirUp) dirUp.classList.remove('active-dir');
+          if (dirDown) dirDown.classList.remove('active-dir');
+          if (dirLeft) dirLeft.classList.remove('active-dir');
+          if (dirRight) dirRight.classList.remove('active-dir');
+        } else {
+          // Directional thresholds (diagonal push triggers both forward & turning simultaneously!)
+          const dirThreshold = 0.25;
+
+          // Up (Forward) & Down (Reverse/Brake)
+          this.keys.up = normY < -dirThreshold;
+          this.keys.down = normY > dirThreshold;
+
+          // Left & Right
+          this.keys.left = normX < -dirThreshold;
+          this.keys.right = normX > dirThreshold;
+
+          // Analog joystick state for smooth precision driving
+          this.joystick.active = true;
+          this.joystick.x = normX;
+          this.joystick.y = normY;
+
+          // Visual glow highlights on circular base arrows
+          if (dirUp) dirUp.classList.toggle('active-dir', this.keys.up);
+          if (dirDown) dirDown.classList.toggle('active-dir', this.keys.down);
+          if (dirLeft) dirLeft.classList.toggle('active-dir', this.keys.left);
+          if (dirRight) dirRight.classList.toggle('active-dir', this.keys.right);
+        }
+      };
+
+      const onPointerDown = (e) => {
+        audio.init();
+        activePointerId = e.pointerId;
+        joyBase.setPointerCapture(e.pointerId);
+
+        const rect = joyBase.getBoundingClientRect();
+        baseCenter = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2
+        };
+
+        updateJoystick(e.clientX, e.clientY);
+        if (e.cancelable) e.preventDefault();
+      };
+
+      const onPointerMove = (e) => {
+        if (activePointerId === null || e.pointerId !== activePointerId) return;
+        updateJoystick(e.clientX, e.clientY);
+        if (e.cancelable) e.preventDefault();
+      };
+
+      const onPointerEnd = (e) => {
+        if (e.pointerId !== activePointerId && activePointerId !== null) return;
+        activePointerId = null;
+
+        joyKnob.style.transform = 'translate(0px, 0px)';
+        this.keys.up = false;
+        this.keys.down = false;
+        this.keys.left = false;
+        this.keys.right = false;
+        this.joystick.active = false;
+        this.joystick.x = 0;
+        this.joystick.y = 0;
+
+        if (dirUp) dirUp.classList.remove('active-dir');
+        if (dirDown) dirDown.classList.remove('active-dir');
+        if (dirLeft) dirLeft.classList.remove('active-dir');
+        if (dirRight) dirRight.classList.remove('active-dir');
+      };
+
+      joyBase.addEventListener('pointerdown', onPointerDown);
+      joyBase.addEventListener('pointermove', onPointerMove);
+      joyBase.addEventListener('pointerup', onPointerEnd);
+      joyBase.addEventListener('pointercancel', onPointerEnd);
+      joyBase.addEventListener('lostpointercapture', onPointerEnd);
+    }
   }
 
   // ========================================================
@@ -1162,6 +1313,14 @@ class Game {
     const hudPetBtn = document.getElementById('hud-pet-btn');
     const hudEngineBtn = document.getElementById('hud-engine-btn');
 
+    const btnOpenCustom = document.getElementById('btn-open-custom');
+    if (btnOpenCustom) {
+      btnOpenCustom.addEventListener('click', () => {
+        audio.init();
+        this.openShopModal('tab-custom');
+      });
+    }
+
     btnOpenShop.addEventListener('click', () => {
       audio.init();
       this.openShopModal();
@@ -1187,6 +1346,7 @@ class Game {
     btnCloseShop.addEventListener('click', () => {
       shopModal.classList.remove('active');
       this.isPaused = false;
+      this._customStudioLoopRunning = false;
     });
 
     // Points to Money Converter Button (1 Point = $2)
@@ -1206,7 +1366,7 @@ class Game {
       }
     });
 
-    // Shop Tabs (Car Dealership, Pets & Naming, Complex Engines, Upgrades)
+    // Shop Tabs (Car Dealership, Styling Studio, Pets & Naming, Complex Engines, Upgrades)
     const tabBtns = document.querySelectorAll('.tab-btn');
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1216,11 +1376,15 @@ class Game {
 
         document.querySelectorAll('.tab-content').forEach(tc => {
           if (tc.id === targetTab) {
-            tc.style.display = (targetTab === 'tab-engines' || targetTab === 'tab-pets') ? 'block' : 'grid';
+            tc.style.display = (targetTab === 'tab-engines' || targetTab === 'tab-pets' || targetTab === 'tab-custom') ? 'block' : 'grid';
           } else {
             tc.style.display = 'none';
           }
         });
+
+        if (targetTab === 'tab-custom') {
+          this.initCustomStudio();
+        }
       });
     });
 
@@ -2088,6 +2252,10 @@ class Game {
     let steerDir = 0;
     if (this.keys.left) steerDir -= 1;
     if (this.keys.right) steerDir += 1;
+    // Smooth analog steering from circular virtual joystick
+    if (this.joystick && this.joystick.active && Math.abs(this.joystick.x) > 0.16) {
+      steerDir = this.joystick.x;
+    }
 
     // Turn faster if moving
     const speedRatio = Math.abs(this.player.speed) / this.player.topSpeed;
@@ -2100,7 +2268,10 @@ class Game {
     const maxSpeed = this.player.isNitroActive ? this.player.topSpeed * 1.5 : this.player.topSpeed;
 
     if (this.keys.up) {
-      this.player.speed += this.player.accel;
+      const throttleMult = (this.joystick && this.joystick.active && this.joystick.y < -0.2)
+        ? Math.min(1.0, Math.abs(this.joystick.y) * 1.25)
+        : 1.0;
+      this.player.speed += this.player.accel * throttleMult;
       if (this.player.speed > maxSpeed) this.player.speed = maxSpeed;
       // Exhaust smoke
       if (Math.random() < 0.3) {
@@ -2381,6 +2552,341 @@ class Game {
   }
 
   // ========================================================
+  // CHARLOTTE'S CAR STYLING & GRAPHICS STUDIO
+  // ========================================================
+  initCustomStudio() {
+    const pCanvas = document.getElementById('custom-preview-canvas');
+    if (!pCanvas) return;
+
+    const carNameEl = document.getElementById('preview-car-name');
+    if (carNameEl && this.player.vehicle) {
+      carNameEl.textContent = `Current Ride: ${this.player.vehicle.name} (${this.player.vehicle.icon})`;
+    }
+
+    // Swatches Palette Setup
+    const paletteEl = document.getElementById('paint-palette');
+    const swatches = [
+      { name: "Charlotte's Pink", color: '#ff007f' },
+      { name: "Cyber Cyan", color: '#00f0ff' },
+      { name: "Emerald Lime", color: '#00f59b' },
+      { name: "Royal Gold", color: '#ffb703' },
+      { name: "Crimson Red", color: '#ff1744' },
+      { name: "Hyper Blue", color: '#2979ff' },
+      { name: "Sunset Orange", color: '#ff6d00' },
+      { name: "Ultra Violet", color: '#7b2cbf' },
+      { name: "Obsidian Stealth", color: '#161922' },
+      { name: "Pearl White", color: '#f0f4f8' }
+    ];
+
+    if (paletteEl && paletteEl.children.length === 0) {
+      swatches.forEach(sw => {
+        const btn = document.createElement('div');
+        btn.className = 'color-swatch';
+        btn.style.backgroundColor = sw.color;
+        btn.title = sw.name;
+        btn.addEventListener('click', () => {
+          audio.init();
+          audio.playPurchase();
+          this.carCustomization.paintColor = sw.color;
+          const picker = document.getElementById('paint-custom-picker');
+          if (picker) picker.value = sw.color;
+          this.updateSwatchHighlights();
+          this.saveProgress();
+          this.showToast(`Applied ${sw.name} Paint! 🎨`);
+        });
+        paletteEl.appendChild(btn);
+      });
+    }
+
+    this.updateSwatchHighlights();
+
+    // Custom Color Picker input
+    const colorPicker = document.getElementById('paint-custom-picker');
+    if (colorPicker && !colorPicker._bound) {
+      colorPicker._bound = true;
+      colorPicker.value = this.carCustomization.paintColor || '#ff007f';
+      colorPicker.addEventListener('input', (e) => {
+        this.carCustomization.paintColor = e.target.value;
+        this.updateSwatchHighlights();
+        this.saveProgress();
+      });
+    }
+
+    // Paint Finish select
+    const finishSelect = document.getElementById('paint-finish-select');
+    if (finishSelect && !finishSelect._bound) {
+      finishSelect._bound = true;
+      finishSelect.value = this.carCustomization.paintFinish || 'metallic';
+      finishSelect.addEventListener('change', (e) => {
+        this.carCustomization.paintFinish = e.target.value;
+        this.saveProgress();
+        this.showToast(`Paint Finish: ${finishSelect.options[finishSelect.selectedIndex].text} ✨`);
+      });
+    }
+
+    // Setup Option Button Groups (Underglow, Spoilers, Liveries)
+    const bindOptionGroup = (groupId, customKey, label) => {
+      const groupEl = document.getElementById(groupId);
+      if (!groupEl || groupEl._bound) return;
+      groupEl._bound = true;
+      const btns = groupEl.querySelectorAll('.btn-opt');
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          audio.init();
+          audio.playPurchase();
+          const val = btn.getAttribute('data-val');
+          this.carCustomization[customKey] = val;
+          btns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.saveProgress();
+          this.showToast(`${label}: ${btn.textContent.trim()} 🌟`);
+        });
+      });
+    };
+
+    bindOptionGroup('underglow-group', 'underglow', 'Underglow');
+    bindOptionGroup('spoiler-group', 'spoiler', 'Spoiler');
+    bindOptionGroup('livery-group', 'livery', 'Racing Decal');
+
+    // Sync active classes on Option Groups
+    const syncGroup = (groupId, val) => {
+      const groupEl = document.getElementById(groupId);
+      if (groupEl) {
+        groupEl.querySelectorAll('.btn-opt').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-val') === val);
+        });
+      }
+    };
+    syncGroup('underglow-group', this.carCustomization.underglow);
+    syncGroup('spoiler-group', this.carCustomization.spoiler);
+    syncGroup('livery-group', this.carCustomization.livery);
+
+    // Dropdowns (Rims, Calipers, Tint, Headlight Xenon)
+    const bindSelect = (id, key, toastLabel) => {
+      const el = document.getElementById(id);
+      if (!el || el._bound) return;
+      el._bound = true;
+      el.value = this.carCustomization[key] || el.options[0].value;
+      el.addEventListener('change', (e) => {
+        audio.init();
+        audio.playPurchase();
+        this.carCustomization[key] = e.target.value;
+        this.saveProgress();
+        this.showToast(`${toastLabel} Updated! 🛞`);
+      });
+    };
+    bindSelect('rim-style-select', 'rimStyle', 'Alloy Rims');
+    bindSelect('caliper-color-select', 'caliperColor', 'Brake Calipers');
+    bindSelect('window-tint-select', 'windowTint', 'Window Glass Tint');
+    bindSelect('headlight-glow-select', 'headlightGlow', 'Xenon Headlights');
+
+    // 1-Click Signature Presets
+    const presetBtns = document.querySelectorAll('.btn-preset-style');
+    presetBtns.forEach(btn => {
+      if (btn._bound) return;
+      btn._bound = true;
+      btn.addEventListener('click', () => {
+        audio.init();
+        audio.playPurchase();
+        const preset = btn.getAttribute('data-preset');
+        this.applyPresetStyle(preset);
+      });
+    });
+
+    // Graphics Quality Options
+    const qualityBtns = document.querySelectorAll('.btn-quality');
+    qualityBtns.forEach(btn => {
+      if (btn._bound) return;
+      btn._bound = true;
+      btn.addEventListener('click', () => {
+        audio.init();
+        const quality = btn.getAttribute('data-quality');
+        this.carCustomization.graphicsQuality = quality;
+        qualityBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.saveProgress();
+        this.showToast(`Graphics Quality: ${quality.toUpperCase()} HD! ✨`);
+      });
+    });
+    qualityBtns.forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-quality') === (this.carCustomization.graphicsQuality || 'ultra'));
+    });
+
+    // Preview Controls: Rotate & Lights
+    if (!this._studioControlsBound) {
+      this._studioControlsBound = true;
+      this.customStudioAngle = 0;
+      this.customStudioAutoSpin = true;
+      this.customStudioLights = true;
+
+      const btnSpin = document.getElementById('btn-spin-car');
+      if (btnSpin) {
+        btnSpin.addEventListener('click', () => {
+          this.customStudioAutoSpin = !this.customStudioAutoSpin;
+          btnSpin.textContent = this.customStudioAutoSpin ? '🔄 Auto Spin: ON' : '🔄 Auto Spin: OFF';
+        });
+      }
+
+      const btnLights = document.getElementById('btn-headlights-preview');
+      if (btnLights) {
+        btnLights.addEventListener('click', () => {
+          this.customStudioLights = !this.customStudioLights;
+          btnLights.textContent = this.customStudioLights ? '💡 Lights: ON' : '💡 Lights: OFF';
+        });
+      }
+    }
+
+    // Start 360 preview loop
+    this.startCustomStudioLoop();
+  }
+
+  updateSwatchHighlights() {
+    const paletteEl = document.getElementById('paint-palette');
+    if (!paletteEl) return;
+    const currentColor = (this.carCustomization.paintColor || '').toLowerCase();
+    Array.from(paletteEl.children).forEach(sw => {
+      const col = (sw.style.backgroundColor || '').toLowerCase();
+      sw.classList.toggle('active', col.includes(currentColor));
+    });
+  }
+
+  applyPresetStyle(preset) {
+    if (preset === 'charlotte') {
+      Object.assign(this.carCustomization, {
+        paintColor: '#ff007f',
+        paintFinish: 'pearlescent',
+        underglow: 'pink',
+        livery: 'twin_stripes',
+        spoiler: 'gt_wing',
+        rimStyle: 'star_chrome',
+        caliperColor: '#ff0033',
+        windowTint: 'limo_dark',
+        headlightGlow: 'laser_pink'
+      });
+      this.showToast("🌸 Applied Charlotte's Dream Edition! ✨");
+    } else if (preset === 'cyber') {
+      Object.assign(this.carCustomization, {
+        paintColor: '#00f59b',
+        paintFinish: 'metallic',
+        underglow: 'cyan',
+        livery: 'cyber_flames',
+        spoiler: 'hyper_wing',
+        rimStyle: 'neon_halo',
+        caliperColor: '#00f0ff',
+        windowTint: 'cyber_blue',
+        headlightGlow: 'cyber_cyan'
+      });
+      this.showToast("⚡ Applied Cyber Neon Drift Style! 💎");
+    } else if (preset === 'gold') {
+      Object.assign(this.carCustomization, {
+        paintColor: '#ffb703',
+        paintFinish: 'gold',
+        underglow: 'gold',
+        livery: 'gt_stripe',
+        spoiler: 'hyper_wing',
+        rimStyle: 'gold_mesh',
+        caliperColor: '#ffc837',
+        windowTint: 'sunset_gold',
+        headlightGlow: 'amber_gold'
+      });
+      this.showToast("👑 Applied Golden Hypercar Edition! 🌟");
+    } else if (preset === 'gp') {
+      Object.assign(this.carCustomization, {
+        paintColor: '#ff1744',
+        paintFinish: 'metallic',
+        underglow: 'none',
+        livery: 'twin_stripes',
+        spoiler: 'gt_wing',
+        rimStyle: 'sport_alloys',
+        caliperColor: '#ff0033',
+        windowTint: 'limo_dark',
+        headlightGlow: 'xenon_white'
+      });
+      this.showToast("🏁 Applied Grand Prix Pro Racer Style! 🏆");
+    } else if (preset === 'stealth') {
+      Object.assign(this.carCustomization, {
+        paintColor: '#161922',
+        paintFinish: 'matte',
+        underglow: 'purple',
+        livery: 'none',
+        spoiler: 'ducktail',
+        rimStyle: 'sport_alloys',
+        caliperColor: '#7b2cbf',
+        windowTint: 'limo_dark',
+        headlightGlow: 'xenon_white'
+      });
+      this.showToast("🖤 Applied Midnight Stealth Phantom! 🔮");
+    }
+
+    // Refresh UI inputs
+    const picker = document.getElementById('paint-custom-picker');
+    if (picker) picker.value = this.carCustomization.paintColor;
+    const finishSelect = document.getElementById('paint-finish-select');
+    if (finishSelect) finishSelect.value = this.carCustomization.paintFinish;
+    const rimSelect = document.getElementById('rim-style-select');
+    if (rimSelect) rimSelect.value = this.carCustomization.rimStyle;
+    const caliperSelect = document.getElementById('caliper-color-select');
+    if (caliperSelect) caliperSelect.value = this.carCustomization.caliperColor;
+    const tintSelect = document.getElementById('window-tint-select');
+    if (tintSelect) tintSelect.value = this.carCustomization.windowTint;
+    const glowSelect = document.getElementById('headlight-glow-select');
+    if (glowSelect) glowSelect.value = this.carCustomization.headlightGlow;
+
+    const syncGroup = (groupId, val) => {
+      const groupEl = document.getElementById(groupId);
+      if (groupEl) {
+        groupEl.querySelectorAll('.btn-opt').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-val') === val);
+        });
+      }
+    };
+    syncGroup('underglow-group', this.carCustomization.underglow);
+    syncGroup('spoiler-group', this.carCustomization.spoiler);
+    syncGroup('livery-group', this.carCustomization.livery);
+
+    this.updateSwatchHighlights();
+    this.saveProgress();
+  }
+
+  startCustomStudioLoop() {
+    if (this._customStudioLoopRunning) return;
+    this._customStudioLoopRunning = true;
+
+    const pCanvas = document.getElementById('custom-preview-canvas');
+    if (!pCanvas) return;
+    const pctx = pCanvas.getContext('2d');
+
+    const loop = () => {
+      const tabCustom = document.getElementById('tab-custom');
+      const shopModal = document.getElementById('shop-modal');
+
+      // Only run when tab and modal are visible
+      if (!tabCustom || tabCustom.style.display === 'none' || !shopModal || !shopModal.classList.contains('active')) {
+        this._customStudioLoopRunning = false;
+        return;
+      }
+
+      if (this.customStudioAutoSpin) {
+        this.customStudioAngle = (this.customStudioAngle || 0) + 0.014;
+      }
+
+      this.renderer.drawVehiclePreview(
+        pctx,
+        pCanvas.width,
+        pCanvas.height,
+        this.player,
+        this.carCustomization,
+        this.customStudioAngle,
+        this.customStudioLights
+      );
+
+      requestAnimationFrame(loop);
+    };
+
+    requestAnimationFrame(loop);
+  }
+
+  // ========================================================
   // PERSISTENCE (LOCAL STORAGE)
   // ========================================================
   saveProgress() {
@@ -2397,7 +2903,9 @@ class Game {
       // Complex Engines & Tuning
       activeEngineId: this.player.engine ? this.player.engine.id : 'eng_stock',
       unlockedEngines: this.engines.filter(e => e.unlocked).map(e => e.id),
-      enginePartLevels: {}
+      enginePartLevels: {},
+      // Car Styling & Customization Options
+      carCustomization: this.carCustomization
     };
     this.upgrades.forEach(u => {
       data.upgradeLevels[u.id] = u.level;

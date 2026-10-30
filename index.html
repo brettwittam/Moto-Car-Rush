@@ -21,17 +21,31 @@
       </div>
     </div>
 
-    <!-- On-screen Touch Controls (for touchscreen tablets/phones) -->
-    <div id="touch-controls">
-      <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
-        <button class="touch-btn" id="btn-touch-up">▲</button>
-        <div style="display:flex; gap:8px;">
-          <button class="touch-btn" id="btn-touch-left">◀</button>
-          <button class="touch-btn" id="btn-touch-down">▼</button>
-          <button class="touch-btn" id="btn-touch-right">▶</button>
+    <!-- On-screen Touch Controls: Virtual Circle Joystick (for touchscreen tablets & phones) -->
+    <div id="touch-controls" class="touch-joystick-wrap">
+      <!-- Nitro Boost Button floating above joystick -->
+      <button class="touch-nitro-btn" id="btn-touch-nitro" title="Rocket Nitro Boost!">
+        <span class="nitro-icon">🚀</span>
+        <span class="nitro-label">NITRO</span>
+      </button>
+
+      <!-- Circular Virtual Joystick -->
+      <div id="joystick-base" class="joystick-base" title="Drag thumbstick to steer and drive">
+        <!-- Directional indicators -->
+        <div class="joy-dir joy-dir-up" id="joy-dir-up">▲</div>
+        <div class="joy-dir joy-dir-down" id="joy-dir-down">▼</div>
+        <div class="joy-dir joy-dir-left" id="joy-dir-left">◀</div>
+        <div class="joy-dir joy-dir-right" id="joy-dir-right">▶</div>
+        <!-- Diagonal guide pips -->
+        <div class="joy-pip joy-pip-ul"></div>
+        <div class="joy-pip joy-pip-ur"></div>
+        <div class="joy-pip joy-pip-dl"></div>
+        <div class="joy-pip joy-pip-dr"></div>
+        <!-- Center Floating Thumbstick Knob -->
+        <div id="joystick-knob" class="joystick-knob">
+          <div class="knob-core"></div>
         </div>
       </div>
-      <button class="touch-btn" id="btn-touch-nitro" style="background:rgba(255,100,0,0.5); font-size:1.1rem; font-weight:800;">🚀</button>
     </div>
 
     <!-- Main Heads-Up Display (HUD) -->
@@ -110,6 +124,11 @@
 
         <!-- Top Right Actions -->
         <div class="hud-group">
+          <!-- Car Styling Studio Button -->
+          <button class="btn-action btn-style" id="btn-open-custom" title="Style & Customize Your Car (Colors, Underglow, Spoilers)">
+            <span>🎨</span> STYLE CAR
+          </button>
+
           <!-- Shop Button -->
           <button class="btn-action" id="btn-open-shop" title="Open Garage & Shop (Hotkey: S)">
             <span>🛒</span> SHOP & CARS
@@ -118,6 +137,11 @@
           <!-- Grand Prix Race Button -->
           <button class="btn-action btn-race" id="btn-toggle-race" title="Enter Grand Prix Race (Hotkey: R)">
             <span>🏁</span> GRAND PRIX
+          </button>
+
+          <!-- Toggle Virtual Joystick Button (helpful for desktop/tablet testing) -->
+          <button class="btn-icon-only" id="btn-toggle-joystick" title="Toggle On-Screen Touch Joystick Controls">
+            <span>🎮</span>
           </button>
 
           <!-- Help / Instructions -->
@@ -161,6 +185,7 @@
           <!-- Shop Tabs -->
           <div class="shop-tabs">
             <button class="tab-btn active" data-tab="tab-cars">🏎️ Car Dealership</button>
+            <button class="tab-btn" data-tab="tab-custom">🎨 Car Styling Studio</button>
             <button class="tab-btn" data-tab="tab-pets">🐾 Pets & Naming</button>
             <button class="tab-btn" data-tab="tab-engines">🔧 Complex Engines</button>
             <button class="tab-btn" data-tab="tab-upgrades">⚡ Upgrades</button>
@@ -169,6 +194,179 @@
           <!-- Tab 1: Varieties of Cars -->
           <div class="shop-grid tab-content" id="tab-cars">
             <!-- Rendered dynamically by JavaScript -->
+          </div>
+
+          <!-- Tab: Charlotte's Car Styling & Graphics Studio -->
+          <div class="tab-content" id="tab-custom" style="display:none;">
+            <div class="custom-studio-container">
+              <!-- Live 360 Car Preview Stage -->
+              <div class="preview-stage-card">
+                <div class="preview-header">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="preview-title">✨ Interactive 360° Car Showcase</span>
+                    <span class="badge-live">LIVE PREVIEW</span>
+                  </div>
+                  <div class="preview-actions">
+                    <button class="btn-preset-mini" id="btn-spin-car" title="Spin Car 360°">🔄 Auto Spin: ON</button>
+                    <button class="btn-preset-mini" id="btn-headlights-preview" title="Toggle Headlight Beams">💡 Lights: ON</button>
+                  </div>
+                </div>
+                <div class="preview-canvas-wrapper">
+                  <canvas id="custom-preview-canvas" width="480" height="230"></canvas>
+                </div>
+                <div class="preview-footer-bar">
+                  <div class="preview-vehicle-info" id="preview-car-name">Charlotte's Turbo GT</div>
+                  <div style="font-size:0.8rem; color:var(--text-muted);">Tip: Changes apply instantly to both City and Grand Prix!</div>
+                </div>
+              </div>
+
+              <!-- 1-Click Signature Styles -->
+              <div class="custom-section">
+                <h4 class="custom-section-title">⚡ 1-Click Signature Styles</h4>
+                <div class="preset-buttons-row">
+                  <button class="btn-preset-style" data-preset="charlotte">
+                    🌸 Charlotte's Dream
+                  </button>
+                  <button class="btn-preset-style" data-preset="cyber">
+                    ⚡ Cyber Neon Drift
+                  </button>
+                  <button class="btn-preset-style" data-preset="gold">
+                    👑 Golden Hypercar
+                  </button>
+                  <button class="btn-preset-style" data-preset="gp">
+                    🏁 Grand Prix Pro
+                  </button>
+                  <button class="btn-preset-style" data-preset="stealth">
+                    🖤 Midnight Stealth
+                  </button>
+                </div>
+              </div>
+
+              <!-- Customization Controls Grid -->
+              <div class="custom-controls-grid">
+                <!-- Paint Color & Finish -->
+                <div class="custom-card">
+                  <h4>🎨 Car Paint & Finish</h4>
+                  <div class="custom-palette-row" id="paint-palette">
+                    <!-- Swatches rendered dynamically -->
+                  </div>
+                  <div class="custom-input-row" style="margin-top:10px;">
+                    <label>Custom Hex:</label>
+                    <input type="color" id="paint-custom-picker" value="#ff007f" title="Pick any custom paint color!">
+                    <select id="paint-finish-select" class="custom-select">
+                      <option value="metallic">🌟 Metallic Gloss (Clear Coat)</option>
+                      <option value="pearlescent">🔮 Pearlescent (Dual-Tone Shift)</option>
+                      <option value="matte">🖤 Stealth Matte (Satin Supercar)</option>
+                      <option value="gold">👑 Liquid Gold Chrome (Mirror)</option>
+                      <option value="carbon">🏁 Carbon Fiber Weave</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Neon Underglow -->
+                <div class="custom-card">
+                  <h4>💡 Neon Ground Underglow</h4>
+                  <div class="custom-btn-group" id="underglow-group">
+                    <button class="btn-opt" data-opt="underglow" data-val="none">Off</button>
+                    <button class="btn-opt" data-opt="underglow" data-val="pink">🌸 Neon Pink</button>
+                    <button class="btn-opt" data-opt="underglow" data-val="cyan">💎 Cyan Ice</button>
+                    <button class="btn-opt" data-opt="underglow" data-val="lime">⚡ Electric Lime</button>
+                    <button class="btn-opt" data-opt="underglow" data-val="gold">🌟 Gold Amber</button>
+                    <button class="btn-opt" data-opt="underglow" data-val="purple">🔮 Ultra Violet</button>
+                    <button class="btn-opt" data-opt="underglow" data-val="rainbow">🌈 Rainbow Wave</button>
+                  </div>
+                </div>
+
+                <!-- Spoilers & Aerodynamics -->
+                <div class="custom-card">
+                  <h4>🏎️ Rear Spoiler & Aerodynamics</h4>
+                  <div class="custom-btn-group" id="spoiler-group">
+                    <button class="btn-opt" data-opt="spoiler" data-val="none">Clean</button>
+                    <button class="btn-opt" data-opt="spoiler" data-val="ducktail">Ducktail Spoiler</button>
+                    <button class="btn-opt" data-opt="spoiler" data-val="gt_wing">Carbon GT Wing</button>
+                    <button class="btn-opt" data-opt="spoiler" data-val="hyper_wing">Hyper Dual Wing</button>
+                  </div>
+                </div>
+
+                <!-- Racing Decals & Liveries -->
+                <div class="custom-card">
+                  <h4>🏁 Racing Decals & Liveries</h4>
+                  <div class="custom-btn-group" id="livery-group">
+                    <button class="btn-opt" data-opt="livery" data-val="none">Clean</button>
+                    <button class="btn-opt" data-opt="livery" data-val="twin_stripes">Twin GT Stripes</button>
+                    <button class="btn-opt" data-opt="livery" data-val="gt_stripe">Center Stripe</button>
+                    <button class="btn-opt" data-opt="livery" data-val="cyber_flames">Cyber Flames</button>
+                    <button class="btn-opt" data-opt="livery" data-val="checkers">GP Checkers</button>
+                    <button class="btn-opt" data-opt="livery" data-val="stars">Stars Livery</button>
+                  </div>
+                </div>
+
+                <!-- Wheel Rims & Calipers -->
+                <div class="custom-card">
+                  <h4>🛞 Alloy Rims & Brake Calipers</h4>
+                  <div class="custom-input-row">
+                    <label>Rim Style:</label>
+                    <select id="rim-style-select" class="custom-select">
+                      <option value="star_chrome">⭐ Chrome Star 5-Spoke</option>
+                      <option value="gold_mesh">👑 Gold Racing Multi-Spoke</option>
+                      <option value="sport_alloys">🖤 Stealth Dark Sport</option>
+                      <option value="neon_halo">💎 Cyber Neon Halo Rims</option>
+                    </select>
+                  </div>
+                  <div class="custom-input-row" style="margin-top:8px;">
+                    <label>Calipers:</label>
+                    <select id="caliper-color-select" class="custom-select">
+                      <option value="#ff0033">🔴 Racing Crimson Red</option>
+                      <option value="#ffc837">🟡 Brembo Racing Gold</option>
+                      <option value="#00f0ff">🔵 Cyber Neon Blue</option>
+                      <option value="#00f59b">🟢 Acid Lime Green</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Window Tint & Xenon Lights -->
+                <div class="custom-card">
+                  <h4>🔮 Glass Tint & Xenon Lighting</h4>
+                  <div class="custom-input-row">
+                    <label>Tint:</label>
+                    <select id="window-tint-select" class="custom-select">
+                      <option value="limo_dark">🕶️ Limo Stealth Dark</option>
+                      <option value="cyber_blue">🔷 Cyber Mirror Blue</option>
+                      <option value="sunset_gold">🌅 Sunset Gold Mirror</option>
+                      <option value="clear">🪟 Clear Competition Glass</option>
+                    </select>
+                  </div>
+                  <div class="custom-input-row" style="margin-top:8px;">
+                    <label>Xenon:</label>
+                    <select id="headlight-glow-select" class="custom-select">
+                      <option value="xenon_white">⚪ Ultra Xenon White</option>
+                      <option value="cyber_cyan">💎 Cyber Cyan Laser</option>
+                      <option value="amber_gold">🟡 Amber Rally Gold</option>
+                      <option value="laser_pink">🌸 Laser Neon Pink</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Graphics Quality Options -->
+              <div class="custom-section" style="margin-top:16px;">
+                <h4 class="custom-section-title">✨ Graphics Quality & Realism Options</h4>
+                <div class="quality-selector-row">
+                  <button class="btn-quality active" data-quality="ultra">
+                    <span class="quality-title">✨ Ultra HD Realism (Recommended)</span>
+                    <span class="quality-desc">Multi-layer metallic shading, dynamic road underglow, 3D animated front wheel steering, alloy rims with calipers, projector headlights, and LED taillight bloom</span>
+                  </button>
+                  <button class="btn-quality" data-quality="vibrant">
+                    <span class="quality-title">🌟 Vibrant Arcade</span>
+                    <span class="quality-desc">Vivid colors, spoilers, racing stripes & alloy wheels with lightweight fast rendering</span>
+                  </button>
+                  <button class="btn-quality" data-quality="clean">
+                    <span class="quality-title">⚡ Performance Clean</span>
+                    <span class="quality-desc">Simplified classic shapes optimized for maximum frame rate on low-end hardware</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Tab 2: Charlotte's Pets & Egg Hatchery -->
@@ -421,12 +619,20 @@
         <div class="modal-body">
           <div class="help-grid">
             <div class="help-card">
-              <h4><span>🕹️</span> Steering & Controls</h4>
+              <h4><span>🕹️</span> Steering & Touch Joystick</h4>
               <p style="font-size:0.9rem; line-height:1.5;">
                 <span class="key-tag">W</span> or <span class="key-tag">▲</span> Drive Forward<br>
                 <span class="key-tag">S</span> or <span class="key-tag">▼</span> Reverse / Brake<br>
                 <span class="key-tag">A</span> / <span class="key-tag">D</span> or <span class="key-tag">◀</span> / <span class="key-tag">▶</span> Steer Left / Right<br>
-                <span class="key-tag">SPACEBAR</span> Nitro Turbo Boost!
+                <span class="key-tag">SPACEBAR</span> or <span class="key-tag">🚀 NITRO</span> Turbo Boost!<br>
+                <span class="key-tag">📱 TOUCH</span> Drag the bottom-right circle joystick with one finger: push up-left to speed forward and turn simultaneously!
+              </p>
+            </div>
+            <div class="help-card">
+              <h4><span>🎨</span> Car Styling & Graphics Studio</h4>
+              <p style="font-size:0.9rem; line-height:1.5;">
+                Click <strong>STYLE CAR</strong> to customize your vehicle in the live 360° showcase!
+                Choose custom metallic paints, neon underglow kits, spoilers, alloy rims, colored brake calipers, and racing liveries!
               </p>
             </div>
             <div class="help-card">

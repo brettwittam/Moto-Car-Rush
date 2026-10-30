@@ -24,14 +24,66 @@ There are two easy ways to launch the game:
 
 | Action | Keyboard Controls | Touchscreen (Tablet / Phone) |
 | :--- | :--- | :--- |
-| **Accelerate Forward** | `W` or `▲` Up Arrow | Top button **▲** |
-| **Brake / Reverse** | `S` or `▼` Down Arrow | Bottom button **▼** |
-| **Steer Left & Right** | `A` / `D` or `◀` / `▶` | Left button **◀** / Right button **▶** |
-| **Nitro Turbo Boost** | `SPACEBAR` | Rocket button **🚀** |
+| **Drive & Steer (Circle Joystick)** | `W`/`S`/`A`/`D` or Arrow Keys | **Drag Circle Joystick**: push up-left to drive forward & turn simultaneously! |
+| **Nitro Turbo Boost** | `SPACEBAR` | Round Rocket button **🚀 NITRO** |
+| **Style & Customize Car Look** | Click **🎨 STYLE CAR** | Tap **🎨 STYLE CAR** |
 | **Reset to Race Track** | `F` key or click **🔄 Reset** | Tap **🔄 Reset** |
 | **Open Car Dealership & Shop** | `S` key or click top-right **🛒 SHOP & CARS** | Tap **🛒 SHOP & CARS** |
+| **Toggle Touch Joystick** | Click **🎮** icon on HUD | Tap **🎮** icon on HUD |
 | **Enter Grand Prix Race** | `R` key or click top-right **🏁 GRAND PRIX** | Tap **🏁 GRAND PRIX** |
 | **Mute / Unmute Sound** | `M` key or click top-right **🔊** | Tap **🔊** |
+
+---
+
+## 🕹️ One-Finger Touch Circle Controls (Tablet & Phone)
+
+Charlotte asked for tablet & phone controls to be much easier:
+- **Circular Virtual Joystick** in the bottom right corner:
+  - Put one finger or thumb on the joystick circle and slide in any direction!
+  - **Pushing Up-Left**: The car drives forward and steers left at the exact same time!
+  - **Pushing Up-Right**: The car drives forward and steers right at the exact same time!
+  - **Pushing Down-Left / Down-Right**: Reverse and corner with precision.
+  - The directional arrows on the circular ring light up with a glowing neon feedback ring showing exactly where you are steering.
+- **🚀 Rocket Nitro Button**: Floats right above the circle joystick for quick thumb boosting.
+- **🎮 Touch Toggle**: On desktop or laptops, you can click the `🎮` button in the top bar to toggle the on-screen joystick and test or play with mouse drag!
+
+---
+
+## 🎨 Vastly Improved Car Graphics & Styling Studio
+
+The graphics for all cars have been overhauled into **stunning 2.5D arcade visuals**:
+- **Metallic & Pearlescent Clear Coat**: Multi-layer curved gradients with realistic specular gloss reflections along the hood and roofline.
+- **Real 3D Wheel Camber**: When steering left or right, the front wheels realistically turn into corners!
+- **Detailed Alloy Rims & Calipers**: Chrome star 5-spokes, gold racing mesh, stealth dark alloys, and glowing neon halo rims with visible brake rotors and racing brake calipers.
+- **Aerodynamics & Spoilers**: Front splitters, side air intake scoops, rear carbon diffusers with vertical fins, and high-downforce GT wings.
+- **Crystal Projector Headlights & LED Taillights**: Projector beams illuminating the asphalt ahead, and full-width rear LED taillights that flare bright ruby crimson when braking or reversing.
+- **The 5 Traffic & AI Race Cars Upgraded**:
+  - 🔵 **Blue Cruiser**: Deep metallic sapphire blue with dual pearl-white racing stripes and chrome star wheels.
+  - 🔴 **Red Speeder**: Championship crimson red supercar with carbon GT wing and red calipers.
+  - 🟢 **Green Dart**: Electric pearlescent emerald tuner with side aero skirts and electric lime underglow.
+  - 🟡 **Yellow Taxi**: Canary yellow gloss, authentic 3D illuminated "TAXI" rooftop dome with amber glow, checkered racing flanks, and chrome bumper guards.
+  - ⚫ **Black Shadow / Midnight Phantom**: Satin midnight obsidian black with purple underglow, violet pinstripes, and quad exhausts.
+
+### 🌟 Charlotte's Car Styling Studio (Options to Improve the Look)
+Click **🎨 STYLE CAR** in the top-right HUD or visit the **🎨 Car Styling Studio** tab in Charlotte's Garage:
+1. **Interactive 360° Live Preview**: Watch your customized car rotate in the showroom with active lighting, reflections, and underglow!
+2. **Car Paint Colors & Finishes**:
+   - Palette of vibrant colors (Charlotte's Hot Pink, Cyber Cyan, Emerald Lime, Royal Gold, Crimson Red, Hyper Blue, Sunset Orange, Ultra Violet, Obsidian Stealth, Pearl White) plus custom hex picker.
+   - Finishes: Metallic Gloss, Pearlescent Dual-Tone, Stealth Matte, Liquid Gold Chrome, Carbon Fiber Weave.
+3. **💡 Neon Ground Underglow**:
+   - Off, 🌸 Neon Pink, 💎 Cyan Ice, ⚡ Electric Lime, 🌟 Gold Amber, 🔮 Ultra Violet, or 🌈 Rainbow RGB Wave.
+4. **🏁 Racing Liveries & Decals**:
+   - Clean, Twin GT Stripes, Center GT Stripe, Cyber Neon Flames, Grand Prix Checkers, or Stars Livery.
+5. **🏎️ Rear Spoilers**:
+   - Clean, Street Tuner Ducktail, High-Downforce Carbon GT Wing, or Hypercar Dual-Deck Wing.
+6. **🛞 Alloy Rims & Brake Calipers**:
+   - Chrome Star 5-Spoke, Gold Racing Mesh, Stealth Dark Sport, Cyber Neon Halo Rims + Calipers in Crimson Red, Gold, Cyan Blue, or Acid Lime.
+7. **🔮 Glass Tint & Xenon Lights**:
+   - Window tints (Limo Stealth Dark, Cyber Mirror Blue, Sunset Gold Mirror, Clear Glass) + Xenon Headlight colors (Ultra White, Cyber Cyan Laser, Amber Rally Gold, Laser Neon Pink).
+8. **⚡ 1-Click Signature Styles**:
+   - Instant presets: *Charlotte's Dream, Cyber Neon Drift, Golden Hypercar, Grand Prix Pro, Midnight Stealth*.
+9. **✨ Graphics Realism Options**:
+   - Choose between **Ultra HD Realism**, **Vibrant Arcade**, and **Performance Clean**.
 
 ---
 
